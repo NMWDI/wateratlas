@@ -1,0 +1,56 @@
+<!doctype html>
+<!--
+ Copyright 2021 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<html>
+<head>
+    <title>NMWDI Water Atlas</title>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+    crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+    crossorigin=""></script>
+</head>
+
+<body>
+    <h1>Welcome to NMWDI Water Atlas</h1>
+    <div id="map"></div>
+    <script src="{{ url_for('static', filename='map.js') }}"></script>
+
+    <script>
+        {% for marker in markers %}
+        L.circleMarker({{marker['coordinates']}},
+                        {{ marker['options'] | safe }},
+                        ).addTo(map)
+        // .bindPopup("{{ marker['popup'] }}")
+        // .openPopup();
+
+
+        {% endfor %}
+    </script>
+
+<!--  <h1>Datastore and Firebase Auth Example</h1>-->
+
+<!--  <h2>Last 10 visits</h2>-->
+<!--  {% for time in times %}-->
+<!--    <p>{{ time }}</p>-->
+<!--  {% endfor %}-->
+
+</body>
+</html>

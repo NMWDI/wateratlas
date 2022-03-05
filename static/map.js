@@ -1,3 +1,5 @@
+// import * as nmbg_locations from './nmbg_locations.json'
+
 var map = L.map('map',
     {preferCanvas: true}).setView([34.359593, -106.906871], 7);
 

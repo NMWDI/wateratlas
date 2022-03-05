@@ -44,7 +44,7 @@
                 <th>Observations</th>
             </tr>
             {% for live_stat in live_stats %}
-                <tr><td>{{live_stat['source']}}</td>
+                <tr id="{{live_stat['id']}}"><td>{{live_stat['source']}}</td>
                     <td>{{live_stat['counts']['Locations']}}</td>
                     <td>{{live_stat['counts']['Things']}}</td>
                     <td>{{live_stat['counts']['Datastreams']}}</td>

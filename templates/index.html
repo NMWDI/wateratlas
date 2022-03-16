@@ -27,7 +27,10 @@
     integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
     crossorigin=""></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script
+  src="https://code.jquery.com/jquery-3.6.0.min.js"
+  integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+  crossorigin="anonymous"></script>
 
 </head>
 
@@ -43,29 +46,89 @@
                 <th>Datastreams</th>
                 <th>Observations</th>
             </tr>
-            {% for live_stat in live_stats %}
-                <tr id="{{live_stat['id']}}"><td>{{live_stat['source']}}</td>
-                    <td>{{live_stat['counts']['Locations']}}</td>
-                    <td>{{live_stat['counts']['Things']}}</td>
-                    <td>{{live_stat['counts']['Datastreams']}}</td>
-                    <td>{{live_stat['counts']['Observations']}}</td>
-                </tr>
-            {% endfor %}
+            <tr id="st2table"></tr>
+            <tr id="nmenvtable"></tr>
+            <tr id="osetable"></tr>
+<!--        <table class="table">-->
+<!--            <tr>-->
+<!--                <th>Source</th>-->
+<!--                <th>Locations</th>-->
+<!--                <th>Things</th>-->
+<!--                <th>Datastreams</th>-->
+<!--                <th>Observations</th>-->
+<!--            </tr>-->
+<!--            {% for live_stat in live_stats %}-->
+<!--                <tr id="{{live_stat['id']}}"><td>{{live_stat['source']}}</td>-->
+<!--                    <td>{{live_stat['counts']['Locations']}}</td>-->
+<!--                    <td>{{live_stat['counts']['Things']}}</td>-->
+<!--                    <td>{{live_stat['counts']['Datastreams']}}</td>-->
+<!--                    <td>{{live_stat['counts']['Observations']}}</td>-->
+<!--                </tr>-->
+<!--            {% endfor %}-->
         </table>
     </div>
     <div id="map"></div>
-    <script src="{{ url_for('static', filename='map.js') }}"></script>
-
+    <script src="{{ url_for('static', filename='map.js') }}">
+    </script>
     <script>
-        {% for marker in markers %}
-        L.circleMarker({{marker['coordinates']}},
-                        {{ marker['options'] | safe }},
-                        ).addTo(map)
-        // .bindPopup("{{ marker['popup'] }}")
-        // .openPopup();
+        $.getJSON("st2locations").then(
+            function (data) {
+                var options=data['options'];
+                var fuzzy_options=data['fuzzy_options'];
+                var markers=data['markers'];
+                var fuzzy_markers=data['fuzzy_markers'];
+                L.geoJson(markers, {
+                    pointToLayer: function (feature, latln){
+                        var marker = L.circleMarker(latln, options)
+                        return marker
+                    }
+                }).addTo(map);
+                L.geoJson(fuzzy_markers, fuzzy_options).addTo(map);
+            })
+
+        $.getJSON("nmenvlocations").then(
+            function (data) {
+                var options=data['options'];
+                var markers=data['markers'];
+                L.geoJson(markers, {
+                    pointToLayer: function (feature, latln){
+                        var marker = L.circleMarker(latln, options)
+                        return marker
+                    }
+                }).addTo(map);
+            })
+
+        $.getJSON("stats").then(
+            function (data){
+                $('#st2table').html(data['st2'])
+                $('#nmenvtable').html(data['nmenv'])
+                $('#osetable').html(data['ose'])
+            }
+        )
+        // $.getJSON("oselocations").then(
+        //     function (data) {
+        //         var options=data['options'];
+        //         var markers=data['markers'];
+        //         L.geoJson(markers, {
+        //             pointToLayer: function (feature, latln){
+        //                 var marker = L.circleMarker(latln, options)
+        //                 return marker
+        //             }
+        //         }).addTo(map);
+        //     })
+
+    </script>
+
+<!--    <script>-->
+<!--        {% for marker in markers %}-->
+<!--        L.circleMarker({{marker['coordinates']}},-->
+<!--                        {{ marker['options'] | safe }},-->
+<!--                        ).addTo(map)-->
+<!--        // .bindPopup("{{ marker['popup'] }}")-->
+<!--        // .openPopup();-->
 
 
-        {% endfor %}
+<!--        {% endfor %}-->
     </script>
 
 <!--  <h1>Datastore and Firebase Auth Example</h1>-->

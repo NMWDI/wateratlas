@@ -8,9 +8,10 @@ from sta.client import Client
 
 app = Flask(__name__)
 
-DEBUG = True
+DEBUG = False
 ENDPOINTS = {'st2': 'https://st2.newmexicowaterdata.org/FROST-Server/v1.1',
-             'nmenv': 'https://nmenv.newmexicowaterdata.org/FROST-Server/v1.1'}
+             'nmenv': 'https://nmenv.newmexicowaterdata.org/FROST-Server/v1.1',
+             'ose': 'https://ose.newmexicowaterdata.org/FROST-Server/v1.1'}
 
 
 def get_count(url, tag):
@@ -31,17 +32,61 @@ def make_endpoint_stats(key):
 
 def make_live_stats():
     return [{'source': 'ST2',
+             'id': 'red',
              'counts': make_endpoint_stats('st2')},
             {'source': 'NMENV',
-             'counts': make_endpoint_stats('nmenv')}]
+             'id': 'green',
+             'counts': make_endpoint_stats('nmenv')},
+            {'source': 'OSE',
+             'id': 'blue',
+             'counts': make_endpoint_stats('ose')}]
 
 
 @app.route('/assemble_locations')
 def assemble_locations():
-    for key in ('st2', 'nmenv'):
-        p = f'{key}_locations.json'
-        if not os.path.isfile(p):
-            client = Client(base_url=ENDPOINTS[key])
+    _assemble_locations()
+
+
+@app.route('/cr_assemble_locations')
+def chron_assemble_locations():
+    _assemble_locations(overwrite=True)
+
+
+def _assemble_locations(overwrite=False):
+
+    for key in ('st2', 'nmenv', 'ose'):
+        client = Client(base_url=ENDPOINTS[key])
+        if key == 'ose':
+            cnt = 1
+            nextlink = None
+            for j in range(5):
+                locations = []
+                exit_flag = False
+                p = f'./{key}_locations-{cnt:05n}.json'
+                if os.path.isfile(p) and not overwrite:
+                    continue
+
+                for i in range(50):
+                    locs, nextlink = client.get_locations_by_url(nextlink=nextlink)
+                    if not locs:
+                        exit_flag = True
+                        break
+
+                    print(len(locs), nextlink)
+                    locations.extend(locs)
+
+                with open(p, 'w') as wfile:
+                    json.dump(locations, wfile)
+
+                if exit_flag:
+                    break
+
+                cnt += 1
+        else:
+            p = f'./{key}_locations.json'
+            if os.path.isfile(p):
+                continue
+
             locations = list(client.get_locations())
             with open(p, 'w') as wfile:
                 json.dump(locations, wfile)
@@ -60,15 +105,32 @@ def root():
     # resp = requests.get('https://st2.newmexicowaterdata.org/FROST-Server/v1.1/Locations?$top=10')
     # locations = resp.json()['value']
     markers = []
-    for p, c in (('./st2_locations.json', 'red'),
-              ('./nmenv_locations.json', 'green')):
-        with open(p) as rfile:
-            obj = json.load(rfile)
-            emarkers = [{'coordinates': [loc['location']['coordinates'][1],
-                                        loc['location']['coordinates'][0]],
-                        'options': {'color': c,
-                                    'radius': 2}} for loc in obj if loc['location']['type'] == 'Point']
-            markers.extend(emarkers)
+    for p, c in (
+            ('./ose_locations-', 'blue'),
+            ('./st2_locations.json', 'red'),
+            ('./nmenv_locations.json', 'green'),):
+
+        if p.endswith('-'):
+            for i in range(10):
+                pp = f'{p}{i + 1:05n}.json'
+                # print(pp, os.path.isfile(pp))
+                if os.path.isfile(pp):
+                    with open(pp) as rfile:
+                        obj = json.load(rfile)
+                        emarkers = [{'coordinates': [loc['location']['coordinates'][1],
+                                                     loc['location']['coordinates'][0]],
+                                     'options': {'color': c,
+                                                 'radius': 2}} for loc in obj if loc['location']['type'] == 'Point']
+                        markers.extend(emarkers)
+                        # print(len(markers))
+        else:
+            with open(p) as rfile:
+                obj = json.load(rfile)
+                emarkers = [{'coordinates': [loc['location']['coordinates'][1],
+                                             loc['location']['coordinates'][0]],
+                             'options': {'color': c,
+                                         'radius': 2}} for loc in obj if loc['location']['type'] == 'Point']
+                markers.extend(emarkers)
 
         # features = obj['features']
         # markers = [{'coordinates': f['geometry']['coordinates'],

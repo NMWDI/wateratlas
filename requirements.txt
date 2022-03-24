@@ -1,4 +1,4 @@
 flask
 requests
-pysta
+pysta>=0.0.30
 gunicorn

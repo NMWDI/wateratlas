@@ -79,30 +79,22 @@ def _assemble_locations(keys=None, overwrite=False):
         client = Client(base_url=ENDPOINTS[key])
         if key == 'ose':
             cnt = 1
-            nextlink = None
-            for j in range(5):
-                locations = []
-                exit_flag = False
+            # service = fsc.SensorThingsService(ENDPOINTS[key])
+            # gen = service.locations().query().list()
+            gen = client.locations()
+            for cnt in range(5):
                 p = f'./{key}_locations-{cnt:05n}.json'
-                if os.path.isfile(p) and not overwrite:
-                    continue
 
-                for i in range(50):
-                    locs, nextlink = client.get_locations_by_url(nextlink=nextlink)
-                    if not locs:
-                        exit_flag = True
+                locations = []
+                for i in range(50000):
+                    try:
+                        locations.append(next(gen))
+                    except StopIteration:
                         break
-
-                    print(len(locs), nextlink)
-                    locations.extend(locs)
 
                 with open(p, 'w') as wfile:
                     json.dump(locations, wfile)
 
-                if exit_flag:
-                    break
-
-                cnt += 1
         else:
             p = f'./{key}_locations.json'
             if os.path.isfile(p) and not overwrite:
@@ -116,24 +108,22 @@ def _assemble_locations(keys=None, overwrite=False):
 @app.route('/nmenvlocations')
 def nmedlocations():
     return ajax_locations('nmenv',
-                          options={'color': 'red', 'radius': 2},)
+                          options={'color': 'red', 'radius': 2}, )
 
 
 @app.route('/st2locations')
 def st2locations():
     return ajax_locations('st2', options={'color': 'green',
-                                  'radius': 2},
+                                          'radius': 2},
                           fuzzy_options={'color': 'blue'})
 
 
 @app.route('/oselocations')
 def oselocations():
-    _assemble_locations(keys=('ose',), overwrite=False)
-
     markers = []
     fuzzy_markers = []
     for i in range(10):
-        pp = f'./oselocations-{i + 1:05n}.json'
+        pp = f'./ose_locations-{i:05n}.json'
         # print(pp, os.path.isfile(pp))
         if os.path.isfile(pp):
             pay = locations_to_payload(pp)
@@ -141,7 +131,7 @@ def oselocations():
             fuzzy_markers.extend(pay['fuzzy_markers'])
             # with open(pp) as rfile:
             #     obj = json.load(rfile)
-    payload = {'options': {'color': 'blue'},
+    payload = {'options': {'color': 'blue', 'radius': 1},
                'markers': markers,
                'fuzzy_markers': fuzzy_markers}
     return json.dumps(payload)
@@ -170,61 +160,7 @@ def locations_to_payload(p):
 
 @app.route('/')
 def root():
-    # assemble_locations()
-    # For the sake of example, use static information to inflate the template.
-    # This will be replaced with real information in later steps.
-    dummy_times = [datetime.datetime(2018, 1, 1, 10, 0, 0),
-                   datetime.datetime(2018, 1, 2, 10, 30, 0),
-                   datetime.datetime(2018, 1, 3, 11, 0, 0),
-                   ]
-
-    # resp = requests.get('https://st2.newmexicowaterdata.org/FROST-Server/v1.1/Locations?$top=10')
-    # locations = resp.json()['value']
-    # markers = []
-    # for p, c in (
-    #         ('./ose_locations-', 'blue'),
-    #         ('./st2_locations.json', 'red'),
-    #         ('./nmenv_locations.json', 'green'),):
-    #
-    #     if p.endswith('-'):
-    #         for i in range(10):
-    #             pp = f'{p}{i + 1:05n}.json'
-    #             # print(pp, os.path.isfile(pp))
-    #             if os.path.isfile(pp):
-    #                 with open(pp) as rfile:
-    #                     obj = json.load(rfile)
-    #                     emarkers = [{'coordinates': [loc['location']['coordinates'][1],
-    #                                                  loc['location']['coordinates'][0]],
-    #                                  'options': {'color': c,
-    #                                              'radius': 2}} for loc in obj if loc['location']['type'] == 'Point']
-    #                     markers.extend(emarkers)
-    #                     # print(len(markers))
-    #     else:
-    #         with open(p) as rfile:
-    #             obj = json.load(rfile)
-    #             emarkers = [{'coordinates': [loc['location']['coordinates'][1],
-    #                                          loc['location']['coordinates'][0]],
-    #                          'options': {'color': c,
-    #                                      'radius': 2}} for loc in obj if loc['location']['type'] == 'Point']
-    #             markers.extend(emarkers)
-    #
-    #     # features = obj['features']
-    #     # markers = [{'coordinates': f['geometry']['coordinates'],
-    #     #             'options': {'color': 'red'}} for f in features]
-    #
-    # if DEBUG:
-    #     live_stats = [{'source': 'ST2',
-    #                    'id': 'red',
-    #                    'counts': {'Locations': 9102, 'Things': 9102, 'Datastreams': 13747, 'Observations': 1069871}},
-    #                   {'source': 'NMENV',
-    #                    'id': 'green',
-    #                    'counts': {'Locations': 53619, 'Things': 53619, 'Datastreams': 739588, 'Observations': 2832124}}]
-    # else:
-    #     live_stats = make_live_stats()
-
-    return render_template('index.html',
-                           # live_stats=make_live_stats()
-                           )
+    return render_template('index.html')
     # markers=markers)
 
 

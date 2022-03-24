@@ -15,7 +15,7 @@
  limitations under the License.
 -->
 
-<html>
+<html xmlns="http://www.w3.org/1999/html">
 <head>
     <title>NMWDI Water Atlas</title>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
@@ -31,6 +31,9 @@
   src="https://code.jquery.com/jquery-3.6.0.min.js"
   integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
   crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"  crossorigin="anonymous">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"  crossorigin="anonymous">
 
 </head>
 
@@ -49,55 +52,17 @@
             <tr id="st2table"></tr>
             <tr id="nmenvtable"></tr>
             <tr id="osetable"></tr>
-<!--        <table class="table">-->
-<!--            <tr>-->
-<!--                <th>Source</th>-->
-<!--                <th>Locations</th>-->
-<!--                <th>Things</th>-->
-<!--                <th>Datastreams</th>-->
-<!--                <th>Observations</th>-->
-<!--            </tr>-->
-<!--            {% for live_stat in live_stats %}-->
-<!--                <tr id="{{live_stat['id']}}"><td>{{live_stat['source']}}</td>-->
-<!--                    <td>{{live_stat['counts']['Locations']}}</td>-->
-<!--                    <td>{{live_stat['counts']['Things']}}</td>-->
-<!--                    <td>{{live_stat['counts']['Datastreams']}}</td>-->
-<!--                    <td>{{live_stat['counts']['Observations']}}</td>-->
-<!--                </tr>-->
-<!--            {% endfor %}-->
         </table>
     </div>
     <div id="map"></div>
+
+    <script src="{{ url_for('static', filename='table.js') }}">
+    </script>
+
     <script src="{{ url_for('static', filename='map.js') }}">
     </script>
+
     <script>
-        $.getJSON("st2locations").then(
-            function (data) {
-                var options=data['options'];
-                var fuzzy_options=data['fuzzy_options'];
-                var markers=data['markers'];
-                var fuzzy_markers=data['fuzzy_markers'];
-                L.geoJson(markers, {
-                    pointToLayer: function (feature, latln){
-                        var marker = L.circleMarker(latln, options)
-                        return marker
-                    }
-                }).addTo(map);
-                L.geoJson(fuzzy_markers, fuzzy_options).addTo(map);
-            })
-
-        $.getJSON("nmenvlocations").then(
-            function (data) {
-                var options=data['options'];
-                var markers=data['markers'];
-                L.geoJson(markers, {
-                    pointToLayer: function (feature, latln){
-                        var marker = L.circleMarker(latln, options)
-                        return marker
-                    }
-                }).addTo(map);
-            })
-
         $.getJSON("stats").then(
             function (data){
                 $('#st2table').html(data['st2'])
